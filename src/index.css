@@ -1,0 +1,277 @@
+@import "tailwindcss";
+
+:root {
+  /* Verity Canvas & Surfaces */
+  --bg-canvas: #06090E;
+  --bg-surface: #0B101A;
+  --bg-surface-elevated: #111726;
+  --bg-surface-subtle: #080D15;
+  --bg-card: #0D1321;
+  --bg-input: #080D15;
+
+  /* Verity Architectural Borders */
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-highlight: rgba(255, 255, 255, 0.16);
+  --border-hover: rgba(255, 255, 255, 0.12);
+
+  /* Verity Typography */
+  --text-primary: #FFFFFF;
+  --text-secondary: #94A0B8;
+  --text-muted: #64748B;
+  --text-accent: #21D2ED;
+
+  /* Verity Cyan & Accent Tokens */
+  --verity-cyan: #21D2ED;
+  --verity-teal: #0EA5E9;
+  --verity-glow: rgba(33, 210, 237, 0.18);
+  --verity-glow-intense: rgba(33, 210, 237, 0.35);
+
+  /* Easing curves */
+  --ease-verity: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: -0.015em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   VERITY SIGNATURE ILLUMINATED VERTICAL-LINE BACKGROUND
+   Generates uneven, illuminated cyan/teal vertical light bars with ambient glow
+   rising from the bottom of the viewport and fading gracefully upward.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.verity-bg-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* Multi-layered vertical light lines */
+.verity-bg-lines::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: 
+    /* Primary sharp vertical lines (varying spacing and widths) */
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 38px,
+      rgba(33, 210, 237, 0.14) 38px,
+      rgba(33, 210, 237, 0.14) 39.5px,
+      transparent 39.5px,
+      transparent 82px,
+      rgba(14, 165, 233, 0.09) 82px,
+      rgba(14, 165, 233, 0.09) 83px,
+      transparent 83px,
+      transparent 148px,
+      rgba(33, 210, 237, 0.22) 148px,
+      rgba(33, 210, 237, 0.22) 149.5px,
+      transparent 149.5px,
+      transparent 224px
+    ),
+    /* Fainter secondary backdrop grid for depth */
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 19px,
+      rgba(255, 255, 255, 0.02) 19px,
+      rgba(255, 255, 255, 0.02) 20px,
+      transparent 20px,
+      transparent 74px
+    );
+  /* Mask out top and edges to create uneven height bars fading toward top */
+  mask-image: radial-gradient(
+    ellipse 85% 75% at 50% 100%,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.75) 45%,
+    rgba(0, 0, 0, 0.15) 80%,
+    transparent 100%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse 85% 75% at 50% 100%,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.75) 45%,
+    rgba(0, 0, 0, 0.15) 80%,
+    transparent 100%
+  );
+  opacity: 0.85;
+  transition: opacity 0.5s var(--ease-verity);
+}
+
+/* Ambient bottom glow and soft cyan haze */
+.verity-bg-lines::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: 
+    /* Concentrated bottom cyan glow */
+    radial-gradient(ellipse 65% 50% at 50% 105%, rgba(33, 210, 237, 0.24) 0%, rgba(14, 165, 233, 0.08) 50%, transparent 85%),
+    /* Higher subtle teal atmospheric haze */
+    radial-gradient(circle 600px at 50% 85%, rgba(33, 210, 237, 0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Dim the background lines during active conversation for pristine legibility */
+.verity-bg-lines.in-conversation::before {
+  opacity: 0.22;
+  mask-image: radial-gradient(ellipse 70% 40% at 50% 100%, rgba(0, 0, 0, 0.6) 0%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 40% at 50% 100%, rgba(0, 0, 0, 0.6) 0%, transparent 100%);
+}
+
+.verity-bg-lines.in-conversation::after {
+  opacity: 0.35;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   VERITY BUTTONS & CONTROLS
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.verity-btn-primary {
+  background-color: #FFFFFF;
+  color: #06090E;
+  font-weight: 500;
+  border-radius: 9999px;
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.4),
+    0 4px 14px rgba(255, 255, 255, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: transform 0.18s var(--ease-verity), background-color 0.18s var(--ease-verity), box-shadow 0.18s var(--ease-verity);
+}
+
+.verity-btn-primary:hover {
+  background-color: #F1F5F9;
+  transform: translateY(-1px);
+  box-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.5),
+    0 6px 20px rgba(33, 210, 237, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+.verity-btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.verity-btn-secondary {
+  background-color: rgba(255, 255, 255, 0.035);
+  color: #F1F5F9;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 9999px;
+  transition: all 0.18s var(--ease-verity);
+}
+
+.verity-btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #FFFFFF;
+  transform: translateY(-0.5px);
+}
+
+.verity-btn-secondary:active {
+  transform: translateY(0);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   VERITY ARCHITECTURAL SURFACES
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.verity-card {
+  background-color: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.25rem;
+  box-shadow: 0 24px 48px -18px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.02);
+  transition: border-color 0.2s var(--ease-verity);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   REFINED MOTION & ENTRANCE ANIMATIONS
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@keyframes verityHeroEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes verityFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes verityPulseSubtle {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-hero-enter {
+  animation: verityHeroEnter 0.45s var(--ease-verity) forwards;
+}
+
+.animate-fade-in {
+  animation: verityFadeIn 0.22s var(--ease-verity) forwards;
+}
+
+.animate-ambient-glow {
+  animation: verityPulseSubtle 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hero-enter,
+  .animate-fade-in,
+  .animate-ambient-glow,
+  .animate-pulse,
+  .animate-spin,
+  .verity-btn-primary,
+  .verity-btn-secondary {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* Precision scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-canvas);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+
