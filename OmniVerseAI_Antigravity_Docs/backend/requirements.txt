@@ -1,0 +1,10 @@
+# Initial dependency proposal; verify compatibility before installing/pinning.
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart
+Pillow
+PyMuPDF
+google-genai
+pytest
+httpx
