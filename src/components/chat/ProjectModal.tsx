@@ -20,7 +20,12 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
   const [instructions, setInstructions] = useState(initialProject?.instructions || '');
   const [error, setError] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  const [prevProject, setPrevProject] = useState(initialProject);
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+
+  if (initialProject !== prevProject || isOpen !== prevIsOpen) {
+    setPrevProject(initialProject);
+    setPrevIsOpen(isOpen);
     if (initialProject) {
       setName(initialProject.name);
       setDescription(initialProject.description || '');
@@ -31,7 +36,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
       setInstructions('');
     }
     setError(null);
-  }, [initialProject, isOpen]);
+  }
 
   if (!isOpen) return null;
 

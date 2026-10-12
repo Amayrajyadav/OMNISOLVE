@@ -27,6 +27,8 @@ class HealthResponse(BaseModel):
     """Health status response schema."""
     status: str = Field(default="ok", description="Operational health status.")
     service: str = Field(default="omnisolve-ai", description="Service identifier.")
+    model_available: bool = Field(default=True, description="Availability flag for AI model provider.")
+    provider: Optional[str] = Field(default="FastAPI + Gemma Backend", description="AI Provider identifier.")
 
 
 # ============================================================================
@@ -184,6 +186,11 @@ class ScreenshotAnalysisResponse(BaseModel):
     mode: Literal[AnalysisMode.SCREENSHOT] = AnalysisMode.SCREENSHOT
     result: ScreenshotResult
     warnings: List[str] = Field(default_factory=list)
+    session_id: Optional[str] = Field(default=None)
+    analysis_type: Optional[str] = Field(default="code_debugger")
+    summary: Optional[str] = Field(default=None)
+
+    model_config = {"extra": "allow"}
 
 
 class CircuitAnalysisResponse(BaseModel):
@@ -191,6 +198,11 @@ class CircuitAnalysisResponse(BaseModel):
     mode: Literal[AnalysisMode.CIRCUIT] = AnalysisMode.CIRCUIT
     result: CircuitResult
     warnings: List[str] = Field(default_factory=list)
+    session_id: Optional[str] = Field(default=None)
+    analysis_type: Optional[str] = Field(default="circuit_analyzer")
+    summary: Optional[str] = Field(default=None)
+
+    model_config = {"extra": "allow"}
 
 
 class DocumentAnalysisResponse(BaseModel):
@@ -198,6 +210,11 @@ class DocumentAnalysisResponse(BaseModel):
     mode: Literal[AnalysisMode.DOCUMENT] = AnalysisMode.DOCUMENT
     result: DocumentResult
     warnings: List[str] = Field(default_factory=list)
+    session_id: Optional[str] = Field(default=None)
+    analysis_type: Optional[str] = Field(default="document_explainer")
+    summary: Optional[str] = Field(default=None)
+
+    model_config = {"extra": "allow"}
 
 
 # Discriminated union of analysis responses
@@ -206,3 +223,21 @@ AnalysisEnvelope = Union[
     CircuitAnalysisResponse,
     DocumentAnalysisResponse,
 ]
+
+
+# ============================================================================
+# Contextual Chat Schemas
+# ============================================================================
+
+class ChatRequest(BaseModel):
+    """Contextual chat request payload."""
+    session_id: Optional[str] = Field(default=None, description="Active session ID.")
+    question: str = Field(..., description="User follow-up question.")
+    analysis_type: Optional[str] = Field(default="code_debugger", description="Domain context.")
+    context: Optional[str] = Field(default=None, description="Optional extra context.")
+
+
+class ChatResponse(BaseModel):
+    """Contextual chat response payload."""
+    session_id: str = Field(..., description="Active session ID.")
+    answer: str = Field(..., description="AI response text.")

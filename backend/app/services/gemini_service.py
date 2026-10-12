@@ -328,3 +328,84 @@ class GeminiService:
             schema_cls=DocumentResult,
             mode_label="document",
         )
+
+    async def chat(
+        self,
+        question: str,
+        session_id: Optional[str] = None,
+        analysis_type: Optional[str] = None,
+        context: Optional[str] = None,
+    ) -> str:
+        """
+        Sends contextual technical query to Gemma model and returns direct response text.
+        """
+        if len(question) > settings.MAX_TEXT_INPUT_CHARS:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "code": "QUESTION_TOO_LONG",
+                    "message": f"Question exceeds maximum allowed length of {settings.MAX_TEXT_INPUT_CHARS} characters.",
+                },
+            )
+
+        prompt_parts = [
+            f"You are OmniSolve AI, an advanced engineering and technical diagnostic assistant.",
+            f"The user is asking a follow-up question regarding an active session ({analysis_type or 'general'}).",
+        ]
+        if context:
+            prompt_parts.append(f"Session Context: {context}")
+        prompt_parts.append(f"User Question: {question}")
+        prompt_parts.append("Provide a clear, accurate, and direct technical explanation.")
+
+        prompt_text = "\n\n".join(prompt_parts)
+        if not self._api_key or not self._api_key.strip():
+            return (
+                f"OmniSolve received your question: '{question}'. "
+                "Server-side AI provider credentials (GEMINI_API_KEY) are not configured. "
+                "Please configure GEMINI_API_KEY to enable live model responses."
+            )
+
+        client = self._get_client()
+
+        max_attempts = 2
+        for attempt in range(max_attempts):
+            try:
+                response = await client.aio.models.generate_content(
+                    model=self._model,
+                    contents=[prompt_text],
+                )
+                return response.text if response and response.text else "No response generated."
+            except HTTPException:
+                raise
+            except errors.APIError as exc:
+                logger.error("Gemini API error during chat: code=%s, msg=%s", getattr(exc, "code", "unknown"), getattr(exc, "message", "unknown"))
+                status_code = getattr(exc, "code", None)
+                if attempt < max_attempts - 1 and status_code in (500, 502, 503, 504):
+                    await asyncio.sleep(0.5)
+                    continue
+                if status_code in (408, 504):
+                    raise HTTPException(
+                        status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                        detail={
+                            "code": "MODEL_TIMEOUT",
+                            "message": "The AI analysis model request timed out.",
+                        },
+                    )
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail={
+                        "code": "MODEL_UNAVAILABLE",
+                        "message": "The AI analysis provider was unable to generate a response.",
+                    },
+                )
+            except Exception as exc:
+                logger.error("Unhandled error in chat: %s", exc)
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail={
+                        "code": "MODEL_UNAVAILABLE",
+                        "message": "The AI analysis provider was unable to generate a response.",
+                    },
+                )
+
+

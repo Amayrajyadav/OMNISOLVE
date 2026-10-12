@@ -20,8 +20,24 @@ class UploadValidationService:
     @staticmethod
     def validate_mode(mode_str: str) -> AnalysisMode:
         """Validate that the requested mode is a supported AnalysisMode."""
+        if not mode_str or not isinstance(mode_str, str):
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "INVALID_MODE",
+                    "message": f"Invalid analysis mode '{mode_str}'. Supported modes: screenshot, circuit, document.",
+                },
+            )
+        normalized = mode_str.lower().strip()
+        alias_map = {
+            "code_debugger": AnalysisMode.SCREENSHOT,
+            "circuit_analyzer": AnalysisMode.CIRCUIT,
+            "document_explainer": AnalysisMode.DOCUMENT,
+        }
+        if normalized in alias_map:
+            return alias_map[normalized]
         try:
-            return AnalysisMode(mode_str.lower().strip())
+            return AnalysisMode(normalized)
         except (ValueError, AttributeError):
             raise HTTPException(
                 status_code=422,

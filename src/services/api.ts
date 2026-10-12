@@ -82,6 +82,13 @@ class ApiService {
       formData.append('file', filesToUpload[0]);
     }
 
+    const modeMap: Record<string, string> = {
+      code_debugger: 'screenshot',
+      circuit_analyzer: 'circuit',
+      document_explainer: 'document',
+    };
+    const mode = modeMap[payload.analysis_type] || payload.analysis_type;
+    formData.append('mode', mode);
     formData.append('analysis_type', payload.analysis_type);
     if (payload.question) {
       formData.append('question', payload.question);
@@ -103,6 +110,7 @@ class ApiService {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
+          errorData.detail?.message ||
           errorData.detail ||
           errorData.message ||
           `Backend returned error ${response.status}: ${response.statusText}`
@@ -115,13 +123,58 @@ class ApiService {
       if (!json || typeof json !== 'object') {
         throw new Error('Invalid response structure: Expected JSON object from backend.');
       }
-      if (!json.summary) {
+      
+      const summaryText =
+        json.summary ||
+        json.result?.summary ||
+        json.result?.overview ||
+        'Analysis completed successfully.';
+
+      if (!summaryText) {
         throw new Error('Invalid analysis response: Missing required "summary" field.');
       }
 
+      const rawResult = json.result || {};
+      const causes = Array.isArray(rawResult.likely_causes)
+        ? rawResult.likely_causes.map((c: { cause?: string; rationale?: string }) => (typeof c === 'string' ? c : `${c.cause}: ${c.rationale}`)).join('\n')
+        : rawResult.likely_problem;
+      const steps = [
+        ...(Array.isArray(rawResult.debugging_steps) ? rawResult.debugging_steps : []),
+        ...(Array.isArray(rawResult.suggested_checks) ? rawResult.suggested_checks : []),
+        ...(Array.isArray(rawResult.steps) ? rawResult.steps : []),
+      ];
+      const components = Array.isArray(rawResult.visible_components)
+        ? rawResult.visible_components.map((c: { name?: string; visible_label?: string; notes?: string }) => ({
+            name: c.name || 'Component',
+            designator: c.visible_label,
+            description: c.notes,
+          }))
+        : rawResult.components_identified;
+      const issues = Array.isArray(rawResult.possible_issues)
+        ? rawResult.possible_issues.map((i: { issue?: string; evidence?: string }) => (typeof i === 'string' ? i : `${i.issue} (${i.evidence || ''})`))
+        : rawResult.potential_issues;
+      const terms = Array.isArray(rawResult.important_terms)
+        ? rawResult.important_terms.map((t: { term?: string; explanation?: string }) => (typeof t === 'string' ? t : `${t.term}: ${t.explanation}`))
+        : rawResult.formulas_or_definitions;
+
       return {
+        ...rawResult,
         ...json,
+        summary: summaryText,
         analysis_type: json.analysis_type || payload.analysis_type,
+        session_id: json.session_id || rawResult.session_id,
+        likely_problem: causes || rawResult.likely_problem,
+        steps: steps.length > 0 ? steps : rawResult.steps,
+        components_identified: components,
+        potential_issues: issues,
+        formulas_or_definitions: terms,
+        key_concepts: rawResult.key_points || rawResult.key_concepts,
+        apparent_function: rawResult.apparent_function || rawResult.overview,
+        uncertainties: [
+          ...(Array.isArray(rawResult.limitations) ? rawResult.limitations : []),
+          ...(Array.isArray(rawResult.uncertainties) ? rawResult.uncertainties : []),
+          ...(Array.isArray(json.warnings) ? json.warnings : []),
+        ],
       };
     } catch (err: unknown) {
       clearTimeout(timeoutId);

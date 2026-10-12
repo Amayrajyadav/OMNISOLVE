@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables and .env file."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", "backend/.env", "../backend/.env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -57,8 +57,11 @@ class Settings(BaseSettings):
     @classmethod
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
         if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
-        return v
+            parsed = [origin.strip() for origin in v.split(",") if origin.strip()]
+            return parsed if parsed else ["http://localhost:5173", "http://127.0.0.1:5173"]
+        if isinstance(v, list):
+            return v if v else ["http://localhost:5173", "http://127.0.0.1:5173"]
+        return ["http://localhost:5173", "http://127.0.0.1:5173"]
 
     @property
     def max_upload_bytes(self) -> int:
